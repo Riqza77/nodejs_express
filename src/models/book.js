@@ -3,6 +3,14 @@ const category = require('./category');
 const Schema = mongoose.Schema;
 
 const Book = new Schema({
+    _id:{
+        type: Number,
+        default: () => {
+            const randomValue = Math.floor(Math.random() * 10000000000); 
+            const paddedValue = String(randomValue).padStart(10, '0');
+            return parseInt(paddedValue, 10); 
+        }
+    },
     title:{
         type: String,
         required: true

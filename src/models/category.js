@@ -1,14 +1,11 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const AutoIncrement = require('mongoose-sequence')(mongoose)
 
 const Category = new Schema({
-    _id: {
+    _id:{
         type: Number,
-        default: () => {
-            const randomValue = Math.floor(Math.random() * 10000000000); 
-            const paddedValue = String(randomValue).padStart(10, '0');
-            return parseInt(paddedValue, 10);
-        }
+        default: null
     },
     name:{
         type: String,
@@ -16,6 +13,8 @@ const Category = new Schema({
     }
 },{
     timestamps : true
-})
+});
+Category.plugin(AutoIncrement, { inc_field: '_id' });
+
 
 module.exports = mongoose.model('Category', Category)
