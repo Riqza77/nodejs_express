@@ -28,10 +28,17 @@ exports.createCategory = (req,res,next) => {
     })
 }
 exports.getAllCategories= (req,res, next) => {
-    res.json({
-        message : "Data Category Berhasil Diambil"
-    });
-    next();
+    category.find()
+    .then( result => {
+        res.status(200).json({
+            message : "Data Category Berhasil Diambil",
+            data: result
+        });
+
+    })
+    .catch(err => {
+        next(err)
+    })
 }
 exports.getCategoryById = (req,res, next) => {
     const categoryId = req.params.categoryId;

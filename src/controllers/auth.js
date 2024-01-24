@@ -1,7 +1,19 @@
 const {validationResult} = require('express-validator');
 const auth = require('../models/auth');
 
+exports.get = (req,res,next) => {
+    auth.find()
+    .then( result => {
+        res.status(200).json({
+            message : "Data User Berhasil Diambil",
+            data: result
+        });
 
+    })
+    .catch(err => {
+        next(err)
+    })
+}
 exports.login = (req,res,next) => {
     const email = req.body.email;
     const password = req.body.password;
