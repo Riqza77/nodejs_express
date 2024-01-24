@@ -4,16 +4,32 @@ const auth = require("../models/auth");
 const {validationResult} = require('express-validator');
 
 exports.createBook = (req,res,next) => {
+    
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        const error = new Error('Invalid Value Tidak Sesuai');
+        error.errorStatus = 400;
+        error.data = errors.array()
+        throw error;
+    }
+
+    if(!req.file){
+        const error = new Error('Image Harus di Upload');
+        error.errorStatus = 422;
+        throw error;
+    }
+
     const title = req.body.title;
+    const image = req.file.path;
     const description = req.body.description;
     const release_year = req.body.release_year;
     const price = req.body.price;
     const total_page = req.body.total_page;
     const categoryName = req.body.nama_kategori;
     const username = req.body.username;
+    const password = req.body.password;
     let id_category
 
-    const errors = validationResult(req);
     
     let thickness
     if(total_page <= 100){
@@ -23,13 +39,7 @@ exports.createBook = (req,res,next) => {
     }else if(total_page >= 101 && total_page <= 200){
         thickness = "sedang";
     }
-    if(!errors.isEmpty()){
-        const error = new Error('Invalid Value Tidak Sesuai');
-        error.errorStatus = 400;
-        error.data = errors.array()
-        throw error;
-    }
-    auth.findOne({ nama: username })
+    auth.findOne({ nama: username, password : password })
     .then((na) => {
         if (na) {
             return category.findOne({ name: categoryName });
@@ -45,7 +55,7 @@ exports.createBook = (req,res,next) => {
                 title: title,
                 description: description,
                 release_year: release_year,
-                image_url: "/images/sjd",
+                image_url: image,
                 price: price,
                 total_page: total_page,
                 thickness: thickness,

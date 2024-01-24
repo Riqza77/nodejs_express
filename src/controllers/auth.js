@@ -17,15 +17,25 @@ exports.get = (req,res,next) => {
 exports.login = (req,res,next) => {
     const email = req.body.email;
     const password = req.body.password;
-    
-    res.json({
-        message : "Login Berhasil",
-        data: {
-            email: email,
-            password : password,
+    auth.findOne({email:email,password : password})
+    .then(result => {
+        if(result){
+                res.json({
+                message : "Login Berhasil",
+                data: result
+            });
+
+        } else {
+            return Promise.reject("Email Dan Password Tidak Cocok, Silahkan Masukkan Data Dengan Benar!");
         }
-    });
-    next();
+    })
+    .catch(err => {
+        res.status(500).json({
+            message: 'Invalid Value Tidak Sesuai',
+            error: err,
+        });
+    })
+    
 }
 exports.register = (req,res,next) => {
     const nama = req.body.nama;
