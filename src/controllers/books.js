@@ -90,13 +90,27 @@ exports.createBook = (req,res,next) => {
         });
     });
 }
-exports.getAllBooks= (req,res, next) => {
+exports.getAllBooks= (req, res, next) => {
+    const currentPage = req.query.page || 1;
+    const perPage = req.query.perPage || 5;
+    let totalItems;
+    
     book.find()
+    .countDocuments()
+    .then( count => {
+        totalItems = count;
+        return book.find()
+        .skip((currentPage - 1) * perPage)
+        .limit(perPage);
+    })
     .then( result => {
 
         res.status(200).json({
             message : "Data Buku Berhasil Diambil",
-            data : result
+            data : result,
+            total_Data : totalItems,
+            per_Page:perPage,
+            current_Page : currentPage,
         });
     })
     .catch(err => {
