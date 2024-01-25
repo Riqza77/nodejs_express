@@ -2,6 +2,8 @@ const book = require("../models/book");
 const category = require("../models/category");
 const auth = require("../models/auth");
 const {validationResult} = require('express-validator');
+const path = require('path');
+const fs = require('fs');
 
 exports.createBook = (req,res,next) => {
     
@@ -12,16 +14,16 @@ exports.createBook = (req,res,next) => {
         error.data = errors.array()
         throw error;
     }
-
     if(!req.file){
         const error = new Error('Image Harus di Upload');
         error.errorStatus = 422;
         throw error;
     }
+        
 
     const title = req.body.title;
-    const image = req.file.path;
     const description = req.body.description;
+    const image = req.file.path;
     const release_year = req.body.release_year;
     const price = req.body.price;
     const total_page = req.body.total_page;
@@ -49,7 +51,9 @@ exports.createBook = (req,res,next) => {
     })
     .then((result) => {
         if (result) {
-            id_category = result._id;
+            
+        
+        id_category = result._id;
 
             const newBook = new book({
                 title: title,
@@ -90,7 +94,7 @@ exports.getAllBooks= (req,res, next) => {
     book.find()
     .then( result => {
 
-        res.json({
+        res.status(200).json({
             message : "Data Buku Berhasil Diambil",
             data : result
         });
@@ -100,7 +104,7 @@ exports.getAllBooks= (req,res, next) => {
     });
 }
 exports.getBookById = (req,res, next) => {
-    const bookId = req.params.bookId;
+    const bookId = req.params.id;
     
     book.findById(bookId)
     .then( result => {
@@ -115,18 +119,33 @@ exports.getBookById = (req,res, next) => {
     });
 }
 exports.updateBook = (req,res, next) => {
-    const bookId = req.params.bookId;
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        const error = new Error('Invalid Value Tidak Sesuai');
+        error.errorStatus = 400;
+        error.data = errors.array()
+        throw error;
+    }
+    if(!req.file){
+        const error = new Error('Image Harus di Upload');
+        error.errorStatus = 422;
+        throw error;
+    }
+    
+    const bookId = req.params.id;
     const title = req.body.title;
     const description = req.body.description;
+    const image = req.file.path;
     const release_year = req.body.release_year;
     const price = req.body.price;
     const total_page = req.body.total_page;
     const categoryName = req.body.nama_kategori;
     const username = req.body.username;
+    const password = req.body.password;
     let id_category
 
-    const errors = validationResult(req);
     
+
     let thickness
     if(total_page <= 100){
         thickness = "tipis";
@@ -135,14 +154,9 @@ exports.updateBook = (req,res, next) => {
     }else if(total_page >= 101 && total_page <= 200){
         thickness = "sedang";
     }
-    if(!errors.isEmpty()){
-        const error = new Error('Invalid Value Tidak Sesuai');
-        error.errorStatus = 400;
-        error.data = errors.array()
-        throw error;
-    }
     
-    auth.findOne({ nama: username })
+    
+    auth.findOne({ nama: username , password : password })
     .then(na => {
         if (!na) {
             return Promise.reject("Pengguna tidak ditemukan");
@@ -153,30 +167,33 @@ exports.updateBook = (req,res, next) => {
         if (!result) {
             return Promise.reject("Kategori tidak ditemukan");
         }
+        
         id_category = result._id;
 
-        return book.findOneAndUpdate(
-            { _id: bookId },
-            {
-                $set: {
-                    title: title,
-                    description: description,
-                    release_year: release_year,
-                    image_url: "/images/sjd",
-                    price: price,
-                    total_page: total_page,
-                    thickness: thickness,
-                    category_id: id_category
-                }
-            },
-            { new: true }
-        );
+        return book.findById(bookId)
+    
+    })
+    .then( result => {
+        if(result){
+            removeImage(result.image_url);
+            result.title = title,
+            result.description = description,
+            result.release_year = release_year,
+            result.image_url = image,
+            result.price = price,
+            result.total_page = total_page,
+            result.thickness = thickness,
+            result.category_id = id_category
+            return result.save();
+
+        }
+        return Promise.reject("Buku tidak ditemukan");
     })
     .then(updatedBook => {
         if (!updatedBook) {
             return Promise.reject("Buku tidak ditemukan");
         }
-        res.status(200).json({
+        return res.status(200).json({
             message: "Buku Berhasil Diedit",
             data: updatedBook
         });
@@ -197,9 +214,32 @@ exports.updateBook = (req,res, next) => {
     });
 }
 exports.deleteBook = (req,res, next) => {
-    const bookId = req.params.bookId;
-    res.json({
-        message : "Data Buku dengan Id " +bookId+ " Berhasil DiHapus"
-    });
-    next();
+    const bookId = req.params.id;
+    book.findByIdAndDelete(bookId)
+    .then( result => {
+        if(result){
+            removeImage(result.image_url);
+            return res.json({
+                message : "Data Buku dengan Id " +bookId+ " Berhasil DiHapus",
+                data : result
+            });
+
+        }
+        return Promise.reject("Buku tidak ditemukan");
+    })
+    .catch( err => {
+        return res.status(404).json({
+            message: "Buku tidak ditemukan",
+            error: err
+        });
+    })
+    
+}
+
+const removeImage = (url) => {
+    console.log('Filepath', url);
+    console.log('dirnam', __dirname);
+    filepath = path.join(__dirname,'../..',url);
+    console.log(filepath);
+    fs.unlink(filepath, err => console.log('error', err));
 }

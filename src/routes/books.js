@@ -5,7 +5,7 @@ const booksController = require('../controllers/books');
 
 router.get('/books',booksController.getAllBooks);
 
-router.post('/book',[
+router.post('/books',[
     body('title').isLength({min: 4}).withMessage('Nama Tidak Boleh Kurang Dari 4 Karakter'),
     body('description').isLength({min: 10}).withMessage('Deskripsi Tidak Boleh Kurang Dari 10 Karakter'),
     body('release_year').isLength({min: 4}).withMessage('Tahun Rilis Tidak Boleh Kurang Dari 4 Karakter'),body('release_year')
@@ -13,9 +13,9 @@ router.post('/book',[
         .withMessage('Tahun Rilis harus antara 1980 dan 2021'),
 ],booksController.createBook);
 
-router.get('/book/:bookId',booksController.getBookById);
+router.get('/books/:id',booksController.getBookById);
 
-router.patch('/book/:bookId',[
+router.patch('/books/:id',[
     body('title').isLength({min: 4}).withMessage('Nama Tidak Boleh Kurang Dari 4 Karakter'),
     body('description').isLength({min: 10}).withMessage('Deskripsi Tidak Boleh Kurang Dari 10 Karakter'),
     body('release_year').isLength({min: 4}).withMessage('Tahun Rilis Tidak Boleh Kurang Dari 4 Karakter'),body('release_year')
@@ -23,6 +23,6 @@ router.patch('/book/:bookId',[
         .withMessage('Tahun Rilis harus antara 1980 dan 2021'),
 ],booksController.updateBook);
 
-router.delete('/book/:bookId',booksController.deleteBook);
+router.delete('/books/:id',booksController.deleteBook);
 
 module.exports = router;
