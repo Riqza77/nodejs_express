@@ -100,8 +100,8 @@ exports.getAllBooks= (req, res, next) => {
     .then( count => {
         totalItems = count;
         return book.find()
-        .skip((currentPage - 1) * perPage)
-        .limit(perPage);
+        .skip((parseInt(currentPage) - 1) * parseInt(perPage))
+        .limit(parseInt(perPage));
     })
     .then( result => {
 
@@ -109,8 +109,8 @@ exports.getAllBooks= (req, res, next) => {
             message : "Data Buku Berhasil Diambil",
             data : result,
             total_Data : totalItems,
-            per_Page:perPage,
-            current_Page : currentPage,
+            per_Page:parseInt(perPage),
+            current_Page : parseInt(currentPage),
         });
     })
     .catch(err => {
