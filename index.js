@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose  = require('mongoose');
+const cors = require('cors')
 const multer = require('multer');
 const path = require('path');
 
@@ -39,6 +40,8 @@ app.use((req, res,next) => {
     res.setHeader('Accesss-Control-Allow-Headers', 'Content-Type', 'Authorization');
     next();
 })
+app.use(cors({ origin: 'http://localhost:3000' }));
+
 app.use('/', bookRoutes);
 app.use('/', authRoutes);
 app.use('/', categoryRoutes);
