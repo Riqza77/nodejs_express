@@ -11,6 +11,7 @@ exports.createBook = (req,res,next) => {
     if(!errors.isEmpty()){
         const error = new Error('Invalid Value Tidak Sesuai');
         error.errorStatus = 400;
+        removeImage(image);
         error.data = errors.array()
         throw error;
     }
@@ -46,6 +47,7 @@ exports.createBook = (req,res,next) => {
         if (na) {
             return category.findOne({ name: categoryName });
         } else {
+            removeImage(image);
             return Promise.reject("Pengguna tidak ditemukan");
         }
     })
@@ -68,6 +70,7 @@ exports.createBook = (req,res,next) => {
 
             return newBook.save();
         } else {
+            removeImage(image);
             return Promise.reject("Kategori tidak ditemukan");
         }
     })
@@ -135,6 +138,7 @@ exports.getBookById = (req,res, next) => {
 exports.updateBook = (req,res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()){
+        removeImage(image);
         const error = new Error('Invalid Value Tidak Sesuai');
         error.errorStatus = 400;
         error.data = errors.array()
@@ -173,12 +177,14 @@ exports.updateBook = (req,res, next) => {
     auth.findOne({ nama: username , password : password })
     .then(na => {
         if (!na) {
+            removeImage(image);
             return Promise.reject("Pengguna tidak ditemukan");
         }
         return category.findOne({ name: categoryName });
     })
     .then(result => {
         if (!result) {
+            removeImage(image);
             return Promise.reject("Kategori tidak ditemukan");
         }
         
@@ -201,10 +207,12 @@ exports.updateBook = (req,res, next) => {
             return result.save();
 
         }
+        removeImage(image);
         return Promise.reject("Buku tidak ditemukan");
     })
     .then(updatedBook => {
         if (!updatedBook) {
+            removeImage(image);
             return Promise.reject("Buku tidak ditemukan");
         }
         return res.status(200).json({

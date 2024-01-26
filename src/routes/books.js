@@ -6,7 +6,7 @@ const booksController = require('../controllers/books');
 router.get('/books',booksController.getAllBooks);
 
 router.post('/books',[
-    body('title').isLength({min: 4}).withMessage('Nama Tidak Boleh Kurang Dari 4 Karakter'),
+    body('title').isLength({min: 4}).withMessage('Title Tidak Boleh Kurang Dari 4 Karakter'),
     body('description').isLength({min: 10}).withMessage('Deskripsi Tidak Boleh Kurang Dari 10 Karakter'),
     body('release_year').isLength({min: 4}).withMessage('Tahun Rilis Tidak Boleh Kurang Dari 4 Karakter'),body('release_year')
         .isInt({ min: 1980, max: 2021 })
