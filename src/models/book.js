@@ -40,7 +40,7 @@ const Book = new Schema({
         required: true
     },
     category_id:{
-        type: String,
+        type: Number,
         required: true
     }
 },{

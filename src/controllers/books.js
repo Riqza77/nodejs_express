@@ -8,6 +8,13 @@ const fs = require('fs');
 exports.createBook = (req,res,next) => {
     
     const errors = validationResult(req);
+    if(!req.file){
+        const error = new Error('Image Harus di Upload');
+        error.errorStatus = 422;
+        throw error;
+    }
+    
+    const image = req.file.path;
     if(!errors.isEmpty()){
         const error = new Error('Invalid Value Tidak Sesuai');
         error.errorStatus = 400;
@@ -15,20 +22,14 @@ exports.createBook = (req,res,next) => {
         error.data = errors.array()
         throw error;
     }
-    if(!req.file){
-        const error = new Error('Image Harus di Upload');
-        error.errorStatus = 422;
-        throw error;
-    }
         
 
     const title = req.body.title;
     const description = req.body.description;
-    const image = req.file.path;
     const release_year = req.body.release_year;
     const price = req.body.price;
     const total_page = req.body.total_page;
-    const categoryName = req.body.nama_kategori;
+    const category_id = req.body.id_kategori;
     const username = req.body.username;
     const password = req.body.password;
     let id_category
@@ -45,10 +46,10 @@ exports.createBook = (req,res,next) => {
     auth.findOne({ nama: username, password : password })
     .then((na) => {
         if (na) {
-            return category.findOne({ name: categoryName });
+            return category.findOne({ _id: category_id });
         } else {
             removeImage(image);
-            return Promise.reject("Pengguna tidak ditemukan");
+            return Promise.reject("Anda Belum Login");
         }
     })
     .then((result) => {
@@ -83,7 +84,7 @@ exports.createBook = (req,res,next) => {
     .catch((err) => {
         console.error('Error:', err);
         let errorMessage = "Internal Server Error";
-        if (err.message === "Kategori tidak ditemukan" || err.message === "Pengguna tidak ditemukan") {
+        if (err.message === "Kategori tidak ditemukan" || err.message === "Anda Belum Login") {
             errorMessage = err.message;
         }
 
@@ -137,27 +138,31 @@ exports.getBookById = (req,res, next) => {
 }
 exports.updateBook = (req,res, next) => {
     const errors = validationResult(req);
+    let image
+    if(req.file){
+        image = req.file.path;
+    }else{
+        image = '';
+
+    }
     if(!errors.isEmpty()){
-        removeImage(image);
+        if(image){
+                  
+            removeImage(image);
+        }
         const error = new Error('Invalid Value Tidak Sesuai');
         error.errorStatus = 400;
         error.data = errors.array()
         throw error;
     }
-    if(!req.file){
-        const error = new Error('Image Harus di Upload');
-        error.errorStatus = 422;
-        throw error;
-    }
-    
+
     const bookId = req.params.id;
     const title = req.body.title;
     const description = req.body.description;
-    const image = req.file.path;
     const release_year = req.body.release_year;
     const price = req.body.price;
     const total_page = req.body.total_page;
-    const categoryName = req.body.nama_kategori;
+    const category_id = req.body.id_kategori;
     const username = req.body.username;
     const password = req.body.password;
     let id_category
@@ -177,14 +182,18 @@ exports.updateBook = (req,res, next) => {
     auth.findOne({ nama: username , password : password })
     .then(na => {
         if (!na) {
-            removeImage(image);
-            return Promise.reject("Pengguna tidak ditemukan");
+            if(image){
+                removeImage(image);
+            }
+            return Promise.reject("Anda Belum Login!!");
         }
-        return category.findOne({ name: categoryName });
+        return category.findOne({ _id: category_id });
     })
     .then(result => {
         if (!result) {
-            removeImage(image);
+            if(image){
+                removeImage(image);
+            }
             return Promise.reject("Kategori tidak ditemukan");
         }
         
@@ -195,11 +204,13 @@ exports.updateBook = (req,res, next) => {
     })
     .then( result => {
         if(result){
-            removeImage(result.image_url);
+            if(image){
+                removeImage(result.image_url);
+                result.image_url = image
+            }
             result.title = title,
             result.description = description,
             result.release_year = release_year,
-            result.image_url = image,
             result.price = price,
             result.total_page = total_page,
             result.thickness = thickness,
@@ -223,7 +234,7 @@ exports.updateBook = (req,res, next) => {
     .catch(err => {
         console.error('Error:', err);
         let statusCode = 500;
-        if (err.message === "Pengguna tidak ditemukan" || err.message === "Kategori tidak ditemukan") {
+        if (err.message === "Anda Belum Login" || err.message === "Kategori tidak ditemukan") {
             statusCode = 404;
         } else if (err.message === "Buku tidak ditemukan") {
             statusCode = 404;
@@ -237,7 +248,16 @@ exports.updateBook = (req,res, next) => {
 }
 exports.deleteBook = (req,res, next) => {
     const bookId = req.params.id;
-    book.findByIdAndDelete(bookId)
+    const username = req.body.username;
+    const password = req.body.password;
+    auth.findOne({ nama: username , password : password })
+    .then(na => {
+        if (!na) {
+            
+            return Promise.reject("Anda Belum Login!!");
+        }
+        return book.findByIdAndDelete(bookId)
+    })
     .then( result => {
         if(result){
             removeImage(result.image_url);
@@ -251,7 +271,6 @@ exports.deleteBook = (req,res, next) => {
     })
     .catch( err => {
         return res.status(404).json({
-            message: "Buku tidak ditemukan",
             error: err
         });
     })

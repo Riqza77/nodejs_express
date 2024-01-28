@@ -115,7 +115,16 @@ exports.updateCategory = (req,res, next) => {
 }
 exports.deleteCategory = (req,res, next) => {
     const categoryId = req.params.id;
-    category.findByIdAndDelete(categoryId)
+    const username = req.body.username;
+    const password = req.body.password;
+    auth.findOne({ nama: username , password : password })
+    .then(na => {
+        if (na) {
+            
+            return category.findByIdAndDelete(categoryId)
+        }
+        return Promise.reject("Anda Belum Login!!");
+    })
     .then( result => {
         if(result){
             return res.json({
@@ -128,7 +137,6 @@ exports.deleteCategory = (req,res, next) => {
     })
     .catch( err => {
         return res.status(404).json({
-            message: "Kategori tidak ditemukan",
             error: err
         });
     })
