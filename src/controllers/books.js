@@ -95,30 +95,35 @@ exports.createBook = (req,res,next) => {
     });
 }
 exports.getAllBooks= (req, res, next) => {
-    const currentPage = req.query.page || 1;
-    const perPage = req.query.perPage || 5;
-    let totalItems;
+    const minYear = req.query.minYear || 2000;
+    const maxPage = req.query.maxPage || 150;
+    const sortByTitle = req.query.sortByTitle || 'asc';
     
-    book.find()
-    .countDocuments()
-    .then( count => {
-        totalItems = count;
-        return book.find()
-        .skip((parseInt(currentPage) - 1) * parseInt(perPage))
-        .limit(parseInt(perPage));
-    })
-    .then( result => {
+    let totalItems;
 
-        res.status(200).json({
-            message : "Data Buku Berhasil Diambil",
-            data : result,
-            total_Data : totalItems,
-            per_Page:parseInt(perPage),
-            current_Page : parseInt(currentPage),
+    book.find({
+        release_year: { $gte: minYear },
+        total_page: { $lte: maxPage }
+    })
+    .sort({ title: sortByTitle === 'asc' ? 1 : -1 })  
+    .countDocuments()
+    .then(count => {
+        totalItems = count;
+        return book.find({
+            release_year: { $gte: minYear },
+            total_page: { $lte: maxPage }
+        })
+        .sort({ title: sortByTitle === 'asc' ? 1 : -1 })  
+        .then(result => {
+            res.status(200).json({
+                message: "Data Buku Berhasil Diambil",
+                data: result,
+                total_Data: totalItems,
+            });
         });
     })
     .catch(err => {
-        next(err)
+        next(err);
     });
 }
 exports.getBookById = (req,res, next) => {
